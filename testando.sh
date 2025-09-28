@@ -1,11 +1,24 @@
+curl -s 'https://wttr.in/' \
+-H "Accept-Language: pt-br" \
+-H 'user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36' > previsao.html
 
-curl 'https://wttr.in/' -H 'user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36' > previsao.html
+current=$(cat previsao.html)
 
-title=$(cat previsao.html | grep -oP '(?<=<title>).*(?=<\/title>)')
+title=$(echo "$current" | pup 'title text{}')
 
-body=$(cat previsao.html | grep -oP '(?<=<body>).*(?=<\/body>)')
+current_weather=$(echo "$current" | sed -n '/<pre>/,/<\/pre>/p' | sed '/┌/q' | grep -oP '<span class="ef226">.*?</span>.*' \
+    | head -n 1 \
+    | sed -E 's/<span class="ef226">.*?<\/span>//' \
+    | xargs)
 
-echo "Título: $title"
+current_temperature=$(echo "$current" | pup 'pre span.ef214 text{}' | head -n 1)
 
-echo "Conteúdo do body: $body"
+termic_sensation=$(echo "$current" | pup 'pre span.ef202 text{}' | head -n 1)
 
+echo "$title"
+
+echo "$current_weather"
+
+echo "Temperatura: $current_temperature ºC"
+
+echo "Sensação térmica : $termic_sensation ºC"
